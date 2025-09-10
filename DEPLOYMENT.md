@@ -30,18 +30,28 @@ git push origin main
 
 ### 3. Настройка GitHub Pages
 
-1. Перейдите в **Settings** вашего репозитория
-2. В левом меню найдите **Pages**
-3. В разделе **Source** выберите:
-   - **Source**: `GitHub Actions`
-4. Нажмите **Save**
-
-### 4. Активация GitHub Actions
+**ВАЖНО**: Сначала запустите workflow, затем настройте Pages!
 
 1. Перейдите в **Actions** вкладку репозитория
-2. Найдите workflow **"Deploy to GitHub Pages"**
+2. Найдите workflow **"Simple Deploy to GitHub Pages"**
 3. Нажмите **"Run workflow"** → **"Run workflow"**
 4. Дождитесь завершения (зеленая галочка)
+
+### 4. Активация GitHub Pages
+
+После успешного выполнения workflow:
+
+1. Перейдите в **Settings** → **Pages**
+2. В разделе **Source** выберите:
+   - **Source**: `GitHub Actions`
+3. Нажмите **Save**
+
+**Альтернативный способ** (если первый не работает):
+1. В **Settings** → **Pages**
+2. **Source**: `Deploy from a branch`
+3. **Branch**: `main` или `master`
+4. **Folder**: `/ (root)`
+5. **Save**
 
 ### 5. Проверка деплоя
 

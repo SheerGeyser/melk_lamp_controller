@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MELK Lamp Controller</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'bluetooth': '#0082FC',
+                        'bluetooth-gray': '#9CA3AF'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* iOS Toggle Switch */
+        .ios-toggle {
+            position: relative;
+            width: 60px;
+            height: 34px;
+            background-color: #ccc;
+            border-radius: 34px;
+            transition: background-color 0.3s;
+            cursor: pointer;
+            border: none;
+            outline: none;
+        }
+
+        .ios-toggle.active {
+            background-color: #4CAF50;
+        }
+
+        .ios-toggle::before {
+            content: '';
+            position: absolute;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background-color: white;
+            top: 4px;
+            left: 4px;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .ios-toggle.active::before {
+            transform: translateX(26px);
+        }
+
+        /* Bluetooth Icon */
+        .bluetooth-icon {
+            width: 24px;
+            height: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .bluetooth-icon.connected {
+            color: #0082FC;
+        }
+
+        .bluetooth-icon.disconnected {
+            color: #9CA3AF;
+        }
+
+        /* Custom Color Picker */
+        .color-picker {
+            width: 100%;
+            height: 50px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            background: none;
+        }
+
+        /* Custom Slider */
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e5e7eb;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* Preset Colors */
+        .preset-color {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 3px solid white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .preset-color:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        /* Glassmorphism */
+        .glass {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center p-4">
+    <!-- Background Elements -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute -top-40 -left-40 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse"></div>
+        <div class="absolute -bottom-40 -right-40 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse" style="animation-delay: 2s;"></div>
+        <div class="absolute top-40 left-1/2 w-80 h-80 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse" style="animation-delay: 4s;"></div>
+    </div>
+
+    <div class="relative w-full max-w-4xl">
+
+        <!-- Благодарность -->
+        <div id="donationBlock" class="glass rounded-2xl p-6 mb-8 text-center">
+            <div class="flex items-center justify-center mb-4">
+                <span class="text-2xl mr-2">🙏</span>
+                <h2 class="text-xl font-semibold text-gray-800">Благодарность</h2>
+            </div>
+            <p class="text-gray-600 mb-4">Если вам понравился этот проект, можете поблагодарить автора</p>
+            
+            <div class="flex flex-wrap justify-center gap-3 mb-4">
+                <a href="https://www.tbank.ru/cf/5JF3QJzjU42" target="_blank" 
+                   class="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 rounded-lg transition-colors duration-200 flex items-center">
+                    <span class="mr-2">🏦</span>
+                    Т-Банк
+                </a>
+                <a href="https://messenger.online.sberbank.ru/sl/iIHpU94AqyfHOTwgp" target="_blank" 
+                   class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center">
+                    <span class="mr-2">💚</span>
+                    СберБанк
+                </a>
+                <button onclick="copyCardNumber()" 
+                        class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center">
+                    <span class="mr-2">💳</span>
+                    Карта
+                </button>
+                <a href="https://t.me/BeeDrila" target="_blank" 
+                   class="bg-blue-400 hover:bg-blue-500 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center">
+                    <span class="mr-2">📱</span>
+                    Telegram
+                </a>
+            </div>
+            
+            <div class="text-sm text-gray-500 flex items-center justify-center gap-2">
+                <p>Карта: <span id="cardNumber" class="font-mono">5536 9139 7125 8773</span></p>
+                <button onclick="copyCardNumber()" 
+                        class="text-gray-400 hover:text-gray-600 transition-colors" 
+                        title="Копировать номер карты">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+
+        <!-- Controls Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Connection -->
+            <div class="glass rounded-2xl p-6 text-center">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Подключение</h3>
+                <button id="connectBtn" class="w-16 h-16 rounded-full bg-gray-100 hover:bg-gray-200 transition-all duration-300 flex items-center justify-center mx-auto">
+                    <svg class="bluetooth-icon disconnected" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/>
+                    </svg>
+                </button>
+                <p class="text-gray-600 text-sm mt-3">Нажмите кнопку Bluetooth для подключения</p>
+            </div>
+
+            <!-- Power Toggle -->
+            <div class="glass rounded-2xl p-6 text-center">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Питание</h3>
+                <div class="flex items-center justify-center space-x-4">
+                    <span class="text-sm text-gray-600">Выкл</span>
+                    <button id="powerToggle" class="ios-toggle" disabled></button>
+                    <span class="text-sm text-gray-600">Вкл</span>
+                </div>
+            </div>
+
+            <!-- Color -->
+            <div class="glass rounded-2xl p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 text-center">Цвет</h3>
+                <input type="color" id="colorPicker" class="color-picker mb-4" value="#ffffff" disabled>
+                <div class="grid grid-cols-4 gap-2">
+                    <div class="preset-color" style="background: #ff0000;" data-color="#ff0000"></div>
+                    <div class="preset-color" style="background: #00ff00;" data-color="#00ff00"></div>
+                    <div class="preset-color" style="background: #0000ff;" data-color="#0000ff"></div>
+                    <div class="preset-color" style="background: #ffff00;" data-color="#ffff00"></div>
+                    <div class="preset-color" style="background: #00ffff;" data-color="#00ffff"></div>
+                    <div class="preset-color" style="background: #ff00ff;" data-color="#ff00ff"></div>
+                    <div class="preset-color" style="background: #ffffff;" data-color="#ffffff"></div>
+                    <div class="preset-color" style="background: #ffa500;" data-color="#ffa500"></div>
+                </div>
+            </div>
+
+            <!-- Brightness -->
+            <div class="glass rounded-2xl p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 text-center">Яркость</h3>
+                <div class="space-y-3">
+                    <input type="range" id="brightnessSlider" class="slider" min="0" max="100" value="100" disabled>
+                    <div class="text-center">
+                        <span id="brightnessValue" class="text-2xl font-bold text-gray-800">100</span>
+                        <span class="text-gray-600 ml-1">%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden Log -->
+        <div class="hidden">
+            <div id="log" class="log"></div>
+        </div>
+    </div>
+
+    <script>
+        // Функция для копирования номера карты
+        function copyCardNumber() {
+            const cardNumber = '5536913971258773';
+            navigator.clipboard.writeText(cardNumber).then(() => {
+                // Показываем уведомление
+                const button = event.target.closest('button');
+                const originalText = button.innerHTML;
+                
+                // Проверяем, какая это кнопка
+                if (button.classList.contains('bg-purple-500')) {
+                    // Большая кнопка "Карта"
+                    button.innerHTML = '<span class="mr-2">✅</span>Скопировано!';
+                    button.classList.add('bg-green-500');
+                    button.classList.remove('bg-purple-500');
+                    
+                    setTimeout(() => {
+                        button.innerHTML = originalText;
+                        button.classList.remove('bg-green-500');
+                        button.classList.add('bg-purple-500');
+                    }, 2000);
+                } else {
+                    // Маленькая кнопка рядом с номером карты
+                    const originalIcon = button.innerHTML;
+                    button.innerHTML = '<svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+                    
+                    setTimeout(() => {
+                        button.innerHTML = originalIcon;
+                    }, 2000);
+                }
+            }).catch(err => {
+                console.error('Ошибка копирования: ', err);
+                alert('Номер карты: ' + cardNumber);
+            });
+        }
+
+
+        class MelkLampController {
+            constructor() {
+                this.device = null;
+                this.server = null;
+                this.characteristic = null;
+                this.isConnected = false;
+                this.currentColor = this.loadSavedColor(); // Загружаем сохраненный цвет
+                this.baseColor = { ...this.currentColor }; // Базовый цвет без применения яркости
+                this.currentBrightness = 100; // Текущая яркость в процентах
+                this.lastBrightnessValue = 100; // Последнее отправленное значение яркости
+                this.brightnessTimeout = null; // Таймер для дебаунсинга яркости
+                this.colorTimeout = null; // Таймер для дебаунсинга цвета
+
+                this.initElements();
+                this.bindEvents();
+                this.log('Инициализация контроллера...', 'info');
+
+                // Обновляем цветовой пикер и слайдер яркости с загруженными значениями
+                this.updateColorPicker();
+                this.brightnessSlider.value = this.currentBrightness;
+                this.brightnessValue.textContent = this.currentBrightness;
+
+                // Логируем загруженный цвет после инициализации элементов
+                this.log(`Загружен цвет: RGB(${this.currentColor.r}, ${this.currentColor.g}, ${this.currentColor.b}), яркость: ${this.currentBrightness}%`, 'info');
+
+                // Пытаемся автоматически подключиться к устройству MELK через 1 секунду
+                setTimeout(() => {
+                    this.autoConnect();
+                }, 1000);
+            }
+
+            // Функции для сохранения и загрузки цвета
+            saveColor() {
+                try {
+                    const colorData = {
+                        baseColor: this.baseColor,
+                        currentColor: this.currentColor,
+                        brightness: this.currentBrightness
+                    };
+                    localStorage.setItem('melkLampColor', JSON.stringify(colorData));
+                    this.log(`Цвет сохранен: RGB(${this.currentColor.r}, ${this.currentColor.g}, ${this.currentColor.b}), яркость: ${this.currentBrightness}%`, 'info');
+                } catch (error) {
+                    this.log('Ошибка сохранения цвета: ' + error.message, 'error');
+                }
+            }
+
+            loadSavedColor() {
+                try {
+                    const saved = localStorage.getItem('melkLampColor');
+                    if (saved) {
+                        const colorData = JSON.parse(saved);
+                        // Проверяем, есть ли новые данные с базовым цветом и яркостью
+                        if (colorData.baseColor && colorData.brightness !== undefined) {
+                            this.baseColor = colorData.baseColor;
+                            this.currentBrightness = colorData.brightness;
+                            return colorData.currentColor;
+                        } else {
+                            // Старый формат - только цвет
+                            this.baseColor = { ...colorData };
+                            this.currentBrightness = 100;
+                            return colorData;
+                        }
+                    }
+                } catch (error) {
+                    // Ошибка будет залогирована после инициализации элементов
+                }
+                // Возвращаем белый цвет по умолчанию
+                this.baseColor = { r: 255, g: 255, b: 255 };
+                this.currentBrightness = 100;
+                return { r: 255, g: 255, b: 255 };
+            }
+
+            resetSavedColor() {
+                try {
+                    localStorage.removeItem('melkLampColor');
+                    this.currentColor = { r: 255, g: 255, b: 255 }; // Сбрасываем на белый
+                    this.baseColor = { r: 255, g: 255, b: 255 }; // Сбрасываем базовый цвет
+                    this.currentBrightness = 100; // Сбрасываем яркость
+                    this.brightnessSlider.value = 100;
+                    this.brightnessValue.textContent = 100;
+                    this.updateColorPicker(); // Обновляем цветовой пикер
+                    this.log('Сохраненный цвет сброшен. Установлен белый цвет по умолчанию.', 'info');
+                } catch (error) {
+                    this.log('Ошибка сброса цвета: ' + error.message, 'error');
+                }
+            }
+
+            updateColorPicker() {
+                // Обновляем цветовой пикер с базовым цветом (без применения яркости)
+                const hexColor = `#${this.baseColor.r.toString(16).padStart(2, '0')}${this.baseColor.g.toString(16).padStart(2, '0')}${this.baseColor.b.toString(16).padStart(2, '0')}`;
+                this.colorPicker.value = hexColor;
+            }
+
+            initElements() {
+                this.connectBtn = document.getElementById('connectBtn');
+                this.powerToggle = document.getElementById('powerToggle');
+                this.colorPicker = document.getElementById('colorPicker');
+                this.brightnessSlider = document.getElementById('brightnessSlider');
+                this.brightnessValue = document.getElementById('brightnessValue');
+                this.logEl = document.getElementById('log');
+            }
+
+            bindEvents() {
+                this.connectBtn.addEventListener('click', () => this.toggleConnection());
+                this.powerToggle.addEventListener('click', () => this.togglePower());
+
+                // Динамическое управление цветом с дебаунсингом
+                this.colorPicker.addEventListener('input', () => {
+                    // Очищаем предыдущий таймер
+                    if (this.colorTimeout) {
+                        clearTimeout(this.colorTimeout);
+                    }
+
+                    // Устанавливаем новый таймер с задержкой 200мс
+                    this.colorTimeout = setTimeout(() => {
+                        this.setColor();
+                    }, 200);
+                });
+
+                // Динамическое управление яркостью с дебаунсингом
+                this.brightnessSlider.addEventListener('input', (e) => {
+                    const newValue = parseInt(e.target.value);
+                    this.brightnessValue.textContent = newValue;
+
+                    // Проверяем, изменилось ли значение на 5% или больше
+                    const difference = Math.abs(newValue - this.lastBrightnessValue);
+                    if (difference >= 5) {
+                        // Очищаем предыдущий таймер
+                        if (this.brightnessTimeout) {
+                            clearTimeout(this.brightnessTimeout);
+                        }
+
+                        // Устанавливаем новый таймер с задержкой 300мс
+                        this.brightnessTimeout = setTimeout(() => {
+                            this.setBrightness();
+                            this.lastBrightnessValue = newValue;
+                        }, 300);
+                    }
+                });
+
+                // Отправляем команду при окончании движения слайдера
+                this.brightnessSlider.addEventListener('change', (e) => {
+                    const newValue = parseInt(e.target.value);
+                    // Очищаем таймер и сразу отправляем команду
+                    if (this.brightnessTimeout) {
+                        clearTimeout(this.brightnessTimeout);
+                        this.brightnessTimeout = null;
+                    }
+                    this.setBrightness();
+                    this.lastBrightnessValue = newValue;
+                });
+
+                // Preset colors
+                document.querySelectorAll('.preset-color').forEach(colorEl => {
+                    colorEl.addEventListener('click', () => {
+                        const color = colorEl.dataset.color;
+                        this.colorPicker.value = color;
+                        this.setColor(); // setColor() теперь сохраняет текущую яркость
+                    });
+                });
+            }
+
+            async autoConnect() {
+                try {
+                    this.log('Попытка автоматического подключения к устройству MELK...', 'info');
+
+                    if (!navigator.bluetooth) {
+                        throw new Error('Bluetooth не поддерживается в этом браузере');
+                    }
+
+                    // Показываем диалог выбора устройства с автоматическим закрытием через 3 секунды
+                    this.log('Выберите устройство MELK для подключения (диалог закроется автоматически через 3 секунды)...', 'info');
+
+                    const device = await this.findMELKDevice(3000);
+
+                    if (device) {
+                        this.log(`Выбрано устройство: ${device.name}`, 'info');
+                        await this.connectToDevice(device);
+                    } else {
+                        this.log('Автоматическое подключение отменено. Нажмите кнопку подключения для ручного выбора устройства.', 'info');
+                    }
+                } catch (error) {
+                    this.log(`Ошибка автоматического подключения: ${error.message}`, 'error');
+                }
+            }
+
+            async findMELKDevice(timeout = 3000) {
+                return new Promise((resolve) => {
+                    // Web Bluetooth API требует пользовательского взаимодействия
+                    // Поэтому мы просто показываем диалог выбора устройства
+                    // с таймаутом для автоматического закрытия
+
+                    const timer = setTimeout(() => {
+                        resolve(null);
+                    }, timeout);
+
+                    try {
+                        navigator.bluetooth.requestDevice({
+                            filters: [{ namePrefix: 'MELK' }],
+                            optionalServices: ['0000fff0-0000-1000-8000-00805f9b34fb']
+                        }).then(device => {
+                            clearTimeout(timer);
+                            resolve(device);
+                        }).catch(error => {
+                            clearTimeout(timer);
+                            resolve(null);
+                        });
+                    } catch (error) {
+                        clearTimeout(timer);
+                        resolve(null);
+                    }
+                });
+            }
+
+            async showDeviceSelectionDialog() {
+                try {
+                    this.log('Выберите устройство для подключения...', 'info');
+
+                    this.device = await navigator.bluetooth.requestDevice({
+                        filters: [{ namePrefix: 'MELK' }],
+                        optionalServices: ['0000fff0-0000-1000-8000-00805f9b34fb']
+                    });
+
+                    await this.connectToDevice(this.device);
+                } catch (error) {
+                    this.log(`Ошибка выбора устройства: ${error.message}`, 'error');
+                }
+            }
+
+            async connectToDevice(device) {
+                try {
+                    this.device = device;
+                    this.log('Подключение...', 'info');
+
+                    this.server = await this.device.gatt.connect();
+                    this.log('Подключено к GATT серверу', 'success');
+
+                    const service = await this.server.getPrimaryService('0000fff0-0000-1000-8000-00805f9b34fb');
+                    this.characteristic = await service.getCharacteristic('0000fff3-0000-1000-8000-00805f9b34fb');
+
+                    this.isConnected = true;
+                    this.updateUI();
+                    this.log('✅ Подключено к лампе!', 'success');
+
+                    // Обработка отключения
+                    this.device.addEventListener('gattserverdisconnected', () => {
+                        this.isConnected = false;
+                        this.updateUI();
+                        this.log('❌ Устройство отключено', 'error');
+                    });
+
+                } catch (error) {
+                    this.log(`Ошибка подключения к устройству: ${error.message}`, 'error');
+                }
+            }
+
+            async toggleConnection() {
+                if (this.isConnected) {
+                    await this.disconnect();
+                } else {
+                    await this.showDeviceSelectionDialog();
+                }
+            }
+
+            async togglePower() {
+                if (this.powerToggle.classList.contains('active')) {
+                    await this.turnOff();
+                } else {
+                    await this.turnOn();
+                }
+            }
+
+            async connect() {
+                // Используем новую функцию выбора устройства
+                await this.showDeviceSelectionDialog();
+            }
+
+            async disconnect() {
+                // Очищаем все таймеры
+                if (this.brightnessTimeout) {
+                    clearTimeout(this.brightnessTimeout);
+                    this.brightnessTimeout = null;
+                }
+                if (this.colorTimeout) {
+                    clearTimeout(this.colorTimeout);
+                    this.colorTimeout = null;
+                }
+
+                if (this.device && this.device.gatt.connected) {
+                    this.device.gatt.disconnect();
+                }
+                this.isConnected = false;
+                this.updateUI();
+                this.log('Отключено от лампы', 'info');
+            }
+
+            async sendCommand(commandBytes, description) {
+                if (!this.isConnected || !this.characteristic) {
+                    this.log('Нет подключения к лампе', 'error');
+                    return false;
+                }
+
+                try {
+                    await this.characteristic.writeValue(commandBytes);
+                    this.log(`${description} - ${commandBytes.reduce((str, byte) => str + byte.toString(16).padStart(2, '0'), '')}`, 'success');
+                    return true;
+                } catch (error) {
+                    this.log(`Ошибка отправки команды: ${error.message}`, 'error');
+                    return false;
+                }
+            }
+
+            async turnOn() {
+                // Включаем лампу с сохраненным цветом и яркостью
+                const { r, g, b } = this.currentColor;
+                const command = new Uint8Array([0x7E, 0x00, 0x05, 0x03, r, g, b, 0x00, 0xEF]);
+                await this.sendCommand(command, `Включить лампу (RGB: ${r}, ${g}, ${b}, яркость: ${this.currentBrightness}%)`);
+                this.powerToggle.classList.add('active');
+            }
+
+            async turnOff() {
+                // Сохраняем текущий цвет перед выключением
+                this.saveColor();
+
+                const command = new Uint8Array([0x7E, 0x00, 0x05, 0x02, 0x00, 0x00, 0x00, 0x00, 0xEF]);
+                await this.sendCommand(command, 'Выключить лампу');
+                this.powerToggle.classList.remove('active');
+            }
+
+            async setColor() {
+                const color = this.colorPicker.value;
+                const r = parseInt(color.substr(1, 2), 16);
+                const g = parseInt(color.substr(3, 2), 16);
+                const b = parseInt(color.substr(5, 2), 16);
+
+                // Обновляем базовый цвет, но сохраняем текущую яркость
+                this.baseColor = { r, g, b };
+
+                // Применяем текущую яркость к новому базовому цвету
+                const brightnessMultiplier = this.currentBrightness / 100;
+                const adjustedR = Math.round(r * brightnessMultiplier);
+                const adjustedG = Math.round(g * brightnessMultiplier);
+                const adjustedB = Math.round(b * brightnessMultiplier);
+
+                this.currentColor = { r: adjustedR, g: adjustedG, b: adjustedB };
+                this.saveColor(); // Сохраняем в localStorage
+
+                // Используем команду 0x03 с RGB значениями, учитывающими яркость
+                const command = new Uint8Array([0x7E, 0x00, 0x05, 0x03, adjustedR, adjustedG, adjustedB, 0x00, 0xEF]);
+                await this.sendCommand(command, `Установить цвет RGB(${adjustedR}, ${adjustedG}, ${adjustedB}) с яркостью ${this.currentBrightness}%`);
+            }
+
+            async setBrightness() {
+                const brightness = parseInt(this.brightnessSlider.value);
+                const brightnessMultiplier = brightness / 100;
+
+                // Применяем яркость к базовому цвету (не к текущему!)
+                const r = Math.round(this.baseColor.r * brightnessMultiplier);
+                const g = Math.round(this.baseColor.g * brightnessMultiplier);
+                const b = Math.round(this.baseColor.b * brightnessMultiplier);
+
+                // Обновляем текущий цвет и яркость
+                this.currentColor = { r, g, b };
+                this.currentBrightness = brightness;
+                this.saveColor(); // Сохраняем в localStorage
+
+                // Используем команду 0x03 для управления яркостью (как в blue_brightness_test.py)
+                // Формат: 7E 00 05 03 [R] [G] [B] 00 EF
+                const command = new Uint8Array([0x7E, 0x00, 0x05, 0x03, r, g, b, 0x00, 0xEF]);
+                await this.sendCommand(command, `Установить яркость ${brightness}% (RGB: ${r}, ${g}, ${b})`);
+            }
+
+
+            updateUI() {
+                const elements = [
+                    this.powerToggle, this.colorPicker, this.brightnessSlider
+                ];
+
+                elements.forEach(el => {
+                    el.disabled = !this.isConnected;
+                });
+
+                // Обновляем Bluetooth иконку
+                const bluetoothIcon = this.connectBtn.querySelector('.bluetooth-icon');
+                if (this.isConnected) {
+                    bluetoothIcon.classList.remove('disconnected');
+                    bluetoothIcon.classList.add('connected');
+                } else {
+                    bluetoothIcon.classList.remove('connected');
+                    bluetoothIcon.classList.add('disconnected');
+                }
+            }
+
+            log(message, type = 'info') {
+                // Проверяем, что элемент лога инициализирован
+                if (!this.logEl) {
+                    console.log(`[${type.toUpperCase()}] ${message}`);
+                    return;
+                }
+
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntry = document.createElement('div');
+                logEntry.className = `log-entry log-${type}`;
+                logEntry.textContent = `[${timestamp}] ${message}`;
+
+                this.logEl.appendChild(logEntry);
+                this.logEl.scrollTop = this.logEl.scrollHeight;
+            }
+        }
+
+        // Инициализация контроллера
+        const controller = new MelkLampController();
+    </script>
+</body>
+</html>

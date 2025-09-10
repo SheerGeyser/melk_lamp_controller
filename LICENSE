@@ -1,21 +1,42 @@
-MIT License
+ПРОПРИЕТАРНАЯ ЛИЦЕНЗИЯ
+MELK Lamp Controller
 
-Copyright (c) 2025 Sergey Forlove
+Copyright (c) 2024 Все права защищены
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+УСЛОВИЯ ИСПОЛЬЗОВАНИЯ
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+1. ПРАВА СОБСТВЕННОСТИ
+   Данное программное обеспечение и весь исходный код являются 
+   интеллектуальной собственностью автора.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+2. ЗАПРЕЩЕННЫЕ ДЕЙСТВИЯ
+   БЕЗ ПИСЬМЕННОГО РАЗРЕШЕНИЯ АВТОРА ЗАПРЕЩАЕТСЯ:
+   - Копировать, воспроизводить или распространять код
+   - Модифицировать, адаптировать или создавать производные работы
+   - Использовать код в коммерческих целях
+   - Публиковать или демонстрировать код третьим лицам
+   - Обратно-инжинирить алгоритмы и протоколы
+   - Использовать код в других проектах
+
+3. РАЗРЕШЕННОЕ ИСПОЛЬЗОВАНИЕ
+   Разрешено только личное некоммерческое использование 
+   для управления собственными устройствами MELK.
+
+4. ОТВЕТСТВЕННОСТЬ
+   Автор не несет ответственности за любой ущерб, 
+   возникший в результате использования данного ПО.
+
+5. НАРУШЕНИЕ ЛИЦЕНЗИИ
+   Нарушение условий данной лицензии влечет за собой 
+   правовые последствия в соответствии с действующим 
+   законодательством об авторских правах.
+
+6. КОНТАКТЫ
+   Для получения разрешения на использование обращайтесь:
+   Telegram: @BeeDrila
+   Email: [укажите ваш email]
+
+Данная лицензия действует бессрочно и не может быть 
+отозвана без письменного уведомления автора.
+
+© 2024 Все права защищены
